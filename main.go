@@ -25,6 +25,8 @@ func main(){
 		panic(err)
 	}
 
+	fmt.Println("Conectado")
+	
 	user := User {
 		Name: "Joao Lucas",
 		Age: 1,
@@ -34,7 +36,14 @@ func main(){
 		panic(err)
 	}
 
-	fmt.Println("Conectado")
+	users, err := getAllUser()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, user := range users {
+		fmt.Println(*user)
+	}
 }
 
 func inserUser(user User) error {
@@ -45,4 +54,24 @@ func inserUser(user User) error {
 
 	fmt.Println("Usuario cadastrado com sucesso!")
 	return nil
+}
+
+func getAllUser()([]*User, error) {
+	res, err := db.Query("SELECT * FROM  user_data")
+	if err != nil {
+		return nil, err
+	}
+  
+	users := []*User{}
+	for res.Next(){
+		var user User
+
+		if err := res.Scan(&user.Name, &user.Age); err != nil {
+			return nil, err
+		}
+
+		users = append(users, &user)
+	}
+
+	return users, nil
 }
