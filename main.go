@@ -2,9 +2,11 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	"net/http"
 
 	"github.com/br4tech/go-to-mysql/adapter"
+	app "github.com/br4tech/go-to-mysql/application"
+	"github.com/br4tech/go-to-mysql/controllers"
 	"github.com/br4tech/go-to-mysql/repository"
 	"github.com/br4tech/go-to-mysql/service"
 	_ "github.com/go-sql-driver/mysql"
@@ -18,21 +20,25 @@ func main() {
     }
     defer db.Close()
 
+
     // Criar uma instância do adaptador MySQL
     mysqlAdapter := adapter.NewMySQLAdapter(db)
 
-    // Criar uma instância do repositório MySQLUserRepository, passando o adaptador MySQL
+    // Criar uma instância do repositório IUserRepository, passando o adaptador MySQL
     userRepository := repository.NewUserRepository(mysqlAdapter)
 
-    // Criar uma instância do serviço de usuário, passando o repositório de usuário
+    // Criar uma instância do serviço IUserService, passando o repositório IUserRepository
     userService := service.NewUserService(userRepository)
 
-    // Exemplo de uso do serviço para buscar um usuário pelo ID
-    user, err := userService.GetUserByID(1)
-    if err != nil {
-        fmt.Println("Erro ao buscar o usuário:", err)
-        return
-    }
+    // Criar uma instância da aplicação, passando o serviço IUserService
+    application := app.NewApplication(userService)
 
-    fmt.Printf("ID: %d\nNome: %s\nIdade: %s\n", user.ID, user.Name, user.Age)
+    // Criar uma instância do controlador de usuário, passando a aplicação
+    userController := controllers.NewUserController(application)
+
+    // Configurar rotas HTTP para manipuladores
+    http.HandleFunc("/user", userController.GetUserByIDHandler)
+
+    // Iniciar o servidor HTTP
+    http.ListenAndServe(":8080", nil)
 }
