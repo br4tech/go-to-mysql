@@ -20,7 +20,6 @@ func main() {
     }
     defer db.Close()
 
-
     // Criar uma instância do adaptador MySQL
     mysqlAdapter := adapter.NewMySQLAdapter(db)
 

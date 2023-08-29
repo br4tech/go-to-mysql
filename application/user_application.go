@@ -19,4 +19,3 @@ func (app *Application) GetUserByID(id int) (*repository.User, error) {
     return app.userService.GetUserByID(id)
 }
 
-// Outros métodos de aplicação conforme necessário...
