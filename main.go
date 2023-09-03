@@ -4,74 +4,35 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/br4tech/go-to-mysql/adapter"
+	"github.com/br4tech/go-to-mysql/repository"
+	"github.com/br4tech/go-to-mysql/service"
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// db esta a nivel de classe
-var(
-	db *sql.DB
-)
+func main() {
+    // Configurar a conexão com o banco de dados MySQL
+    db, err := sql.Open("mysql", "root:admin@tcp(localhost:3306)/users")
+    if err != nil {
+        panic(err)
+    }
+    defer db.Close()
 
-type User struct {
-	Name string
-	Age int
-}
+    // Criar uma instância do adaptador MySQL
+    mysqlAdapter := adapter.NewMySQLAdapter(db)
 
-func main(){
-	var err error
+    // Criar uma instância do repositório MySQLUserRepository, passando o adaptador MySQL
+    userRepository := repository.NewUserRepository(mysqlAdapter)
 
-	db, err = sql.Open("mysql", "root:admin@tcp(localhost:3306)/users")
-	if err != nil {
-		panic(err)
-	}
+    // Criar uma instância do serviço de usuário, passando o repositório de usuário
+    userService := service.NewUserService(userRepository)
 
-	fmt.Println("Conectado")
-	
-	user := User {
-		Name: "Joao Lucas",
-		Age: 1,
-	}
+    // Exemplo de uso do serviço para buscar um usuário pelo ID
+    user, err := userService.GetUserByID(1)
+    if err != nil {
+        fmt.Println("Erro ao buscar o usuário:", err)
+        return
+    }
 
-	if insertError := inserUser(user); insertError != nil {
-		panic(err)
-	}
-
-	users, err := getAllUser()
-	if err != nil {
-		panic(err)
-	}
-
-	for _, user := range users {
-		fmt.Println(*user)
-	}
-}
-
-func inserUser(user User) error {
-	_, err := db.Exec(fmt.Sprintf("INSERT INTO user_data VALUES('%s', %d)", user.Name, user.Age))
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Usuario cadastrado com sucesso!")
-	return nil
-}
-
-func getAllUser()([]*User, error) {
-	res, err := db.Query("SELECT * FROM  user_data")
-	if err != nil {
-		return nil, err
-	}
-  
-	users := []*User{}
-	for res.Next(){
-		var user User
-
-		if err := res.Scan(&user.Name, &user.Age); err != nil {
-			return nil, err
-		}
-
-		users = append(users, &user)
-	}
-
-	return users, nil
+    fmt.Printf("ID: %d\nNome: %s\nIdade: %s\n", user.ID, user.Name, user.Age)
 }
